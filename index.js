@@ -6,9 +6,18 @@ connectToMongo();       // function for establishing connectivity to MongoDB
 const app = express() // express object
 const port = 5000 || process.env.port
 
-// middleware for using the body of the request
-app.use(cors());
+//A middleWare to  use req.body
 app.use(express.json());
+app.use(
+  cors({
+    origin:"*"
+  })
+)
+app.use(express.static(__dirname + '/public'));
+app.use('/public', express.static(__dirname + '/public'));
+app.get("/",(req,res)=>{
+  res.render("index");
+})
 
 // Available routes
 app.use('/api/auth', require('./routes/auth.js'));

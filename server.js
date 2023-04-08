@@ -4,7 +4,8 @@ var cors = require('cors');
 
 connectToMongo();       // function for establishing connectivity to MongoDB
 const app = express() // express object
-const port = 5000 || process.env.port
+const port = 5000 || process.env.port;
+app.set("view engine","ejs");
 
 //A middleWare to  use req.body
 app.use(express.json());

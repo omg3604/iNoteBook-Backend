@@ -145,7 +145,7 @@ router.put('/editUser/:id', [
     if (name) { newdet.name = name; }
     if (email) { newdet.email = email }
     // find the user with corresponding user id and update all the data feilds.
-    user = await User.findByIdAndUpdate(req.params.id, { $set: newdet }, { new: true });
+    let user = await User.findByIdAndUpdate(req.params.id, { $set: newdet }, { new: true });
     success = true
     res.json({ success, user });
   }
@@ -176,5 +176,36 @@ router.delete('/deleteUser/:id', fetchUser, async (req, res) => {
     return res.status(500).json({ success, error: "Internal Server Error" });
   }
 })
+
+// ENDPOINT 6 : Find the authtoken of a user by its email : POST "/api/auth/finduser". Login required
+
+router.post('/finduser' , fetchUser , async(req , res) => {
+  const { email } = req.body;
+  try{
+    //find the id of the user with corresponding email
+    let user = await User.findOne({ email });
+    // if no user exists then return error
+    if (!user) {
+      success = false;
+      return res.status(400).json({ success, error: "Invalid credentials." });
+    }
+    const data = {
+      user: {
+        id: user.id
+      }
+    }
+    // generating auth token
+    const authToken = jwt.sign(data, JWT_SECRET);
+    // sending auth token of corresponding user as response
+    success = true;
+    res.json({ success, authToken });
+  }
+  catch (error) {
+    console.error(error.message);
+    success = false;
+    return res.status(500).json({ success, error: "Internal Server Error" });
+  }
+});
+
 
 module.exports = router;

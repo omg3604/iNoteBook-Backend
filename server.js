@@ -10,7 +10,9 @@ app.set("view engine","ejs");
 //A middleWare to  use req.body
 app.use(express.json());
 app.use(
-  cors(git)
+  cors({
+    origin:"*"
+  })
 )
 app.use(express.static(__dirname + '/public'));
 app.use('/public', express.static(__dirname + '/public'));

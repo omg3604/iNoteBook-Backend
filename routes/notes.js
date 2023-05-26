@@ -21,6 +21,7 @@ router.post('/addNotes', fetchUser, [
     // Validation
     body('title', 'Title must consists of minimum 3 characters').isLength({ min: 3 }),
     body('description', 'Description must consists of minimum 6 characters').isLength({ min: 6 }),
+    body('expdate','Expiry Date must note be empty').isEmpty()
 ], async (req, res) => {
 
     try {

@@ -25,7 +25,8 @@ const NotesSchema = new Schema({
     },
     expdate:{
         type: Date,
-        default: Date.now
+        default: Date.now,
+        required: true
     }
 })
 

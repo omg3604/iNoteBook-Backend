@@ -33,7 +33,7 @@ router.post('/addNotes', fetchUser, [
 
         // if no errors, create a new note using the details in request
         const note = new Note({
-            title, description, tag, user: req.user.id
+            title, description, tag, expdate, user: req.user.id
         })
 
         // save the created note.
@@ -48,7 +48,7 @@ router.post('/addNotes', fetchUser, [
 
 // ENDPOINT 3 : Update an existing Note using : PUT "/api/notes/updateNote/:noteId". Login required
 router.put('/updateNote/:id', fetchUser, async (req, res) => {
-    const { title, description, tag } = req.body;
+    const { title, description, tag , expdate} = req.body;
 
     try {
         // Create a new note object
@@ -56,6 +56,7 @@ router.put('/updateNote/:id', fetchUser, async (req, res) => {
         if (title) { newNote.title = title; }
         if (description) { newNote.description = description }
         if (tag) { newNote.tag = tag }
+        if (expdate) { newNote.expdate == expdate }
 
         // Find the note to be updated and update it.
         let note = await Note.findById(req.params.id);
@@ -148,5 +149,7 @@ router.delete('/deleteAllNotes', fetchUser, async (req, res) => {
         return res.status(500).send("Internal Server Error");
     }
 })
+
+// ENDPOINT 7 : Add a shared note to other user database.
 
 module.exports = router;

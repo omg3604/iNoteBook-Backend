@@ -24,7 +24,7 @@ router.post('/addNotes', fetchUser, [
 ], async (req, res) => {
 
     try {
-        const { title, description, tag } = req.body;
+        const { title, description, tag , expdate} = req.body;
         // if there are errors, return bad request and the errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

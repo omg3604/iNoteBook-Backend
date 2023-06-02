@@ -150,6 +150,25 @@ router.delete('/deleteAllNotes', fetchUser, async (req, res) => {
     }
 })
 
-// ENDPOINT 7 : Add a shared note to other user database.
+// ENDPOINT 7 : Add a shared note to other user's database.
+router.post('/addSharedNote', fetchUser, async (req, res) => {
+
+    try {
+        const { title, description, tag , expdate} = req.body;
+
+        // if no errors, create a new note using the details in request
+        const note = new Note({
+            title, description, tag:"shared", expdate, user: req.user.id
+        })
+
+        // save the created note.
+        const savedNote = await note.save();
+        res.json(savedNote);
+        
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).send("Internal Server Error");
+    }
+})
 
 module.exports = router;

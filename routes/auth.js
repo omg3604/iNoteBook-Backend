@@ -179,9 +179,9 @@ router.delete('/deleteUser/:id', fetchUser, async (req, res) => {
 
 // ENDPOINT 6 : Find the authtoken of a user by its email : POST "/api/auth/finduser". Login required
 
-router.post('/finduser' , fetchUser , async(req , res) => {
+router.post('/finduser', fetchUser, async (req, res) => {
   const { email } = req.body;
-  try{
+  try {
     //find the id of the user with corresponding email
     let user = await User.findOne({ email });
     // if no user exists then return error
@@ -189,16 +189,18 @@ router.post('/finduser' , fetchUser , async(req , res) => {
       success = false;
       return res.status(400).json({ success, error: "Invalid credentials." });
     }
-    const data = {
-      user: {
-        id: user.id
+    else {
+      const data = {
+        user: {
+          id: user.id
+        }
       }
+      // generating auth token
+      const authToken = jwt.sign(data, JWT_SECRET);
+      // sending auth token of corresponding user as response
+      success = true;
+      res.json({ success, authToken });
     }
-    // generating auth token
-    const authToken = jwt.sign(data, JWT_SECRET);
-    // sending auth token of corresponding user as response
-    success = true;
-    res.json({ success, authToken });
   }
   catch (error) {
     console.error(error.message);

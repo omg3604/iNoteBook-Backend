@@ -89,7 +89,7 @@ router.post('/verifyUser', [
 
     let genotp;
     try {
-      const result = await Auth(nonUser.email, "iNoteBook");
+      const result = await Auth(req.body.email, "iNoteBook");
       genotp = result.OTP;
       console.log(result);
       console.log(result.mail);
@@ -99,7 +99,7 @@ router.post('/verifyUser', [
       console.log(error);
     }
     success = true;
-    return res.json({ success,  genotp});
+    return res.json({ success,  nonUser});
 
   } catch (error) {
     console.error(error.message);

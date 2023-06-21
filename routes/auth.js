@@ -1,10 +1,12 @@
 const express = require('express');
+const NonUser = require('../models/NonUser');
 const User = require('../models/User');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fetchUser = require('../middleware/fetchUser');
+const { Auth, LoginCredentials } = require("two-step-auth");
 
 const JWT_SECRET = "Omis&agood&boy";
 
@@ -21,8 +23,6 @@ router.post('/createuser', [
     success = false;
     return res.status(500).json({ success, error: errors.array() });
   }
-
-
   try {
     // Check whether user with same email exists already
     let user = await User.findOne({ email: req.body.email });
@@ -54,6 +54,52 @@ router.post('/createuser', [
     // sending auth token as response
     success = true;
     return res.json({ success, authToken });
+
+  } catch (error) {
+    console.error(error.message);
+    success = false;
+    return res.status(500).json({ success, error: "Internal Server Error" });
+  }
+})
+
+// Email Verification of User
+router.post('/verifyUser', [
+  body('name', 'Name must consists of minimum 2 characters').isLength({ min: 2 }),
+  body('email', 'Enter a valid Email').isEmail(),
+  body('password', 'Password must consists of minimum 6 characters').isLength({ min: 6 }),
+], async (req, res) => {
+  // if there are errors, return bad request and the errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    success = false;
+    return res.status(500).json({ success, error: errors.array() });
+  }
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const secPass = await bcrypt.hash(req.body.password, salt);
+    let nonUser = await NonUser.create({
+      name: req.body.name,
+      email: req.body.email,
+      password: secPass,
+    });
+
+    LoginCredentials.mailID = process.env.REACT_APP_EMAIL; 
+    LoginCredentials.password = process.env.REACT_APP_EMAIL_PASS; 
+    LoginCredentials.use = true;
+
+    let genotp;
+    try {
+      const res = await Auth(nonUser.email, "iNoteBook");
+      genotp = res.OTP;
+      console.log(res);
+      console.log(res.mail);
+      console.log(res.OTP);
+      console.log(res.success);
+    } catch (error) {
+      console.log(error);
+    }
+    success = true;
+    return res.json({ success,  genotp});
 
   } catch (error) {
     console.error(error.message);

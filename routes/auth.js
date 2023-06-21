@@ -1,12 +1,10 @@
 const express = require('express');
-const NonUser = require('../models/NonUser');
 const User = require('../models/User');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fetchUser = require('../middleware/fetchUser');
-const { Auth, LoginCredentials } = require("two-step-auth");
 
 const JWT_SECRET = "Omis&agood&boy";
 
@@ -62,54 +60,7 @@ router.post('/createuser', [
   }
 })
 
-// Email Verification of User
-router.post('/verifyUser', [
-  body('name', 'Name must consists of minimum 2 characters').isLength({ min: 2 }),
-  body('email', 'Enter a valid Email').isEmail(),
-  body('password', 'Password must consists of minimum 6 characters').isLength({ min: 6 }),
-], async (req, res) => {
-  // if there are errors, return bad request and the errors
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    success = false;
-    return res.status(500).json({ success, error: errors.array() });
-  }
-  try {
-    const salt = await bcrypt.genSalt(10);
-    const secPass = await bcrypt.hash(req.body.password, salt);
-    let nonUser = await NonUser.create({
-      name: req.body.name,
-      email: req.body.email,
-      password: secPass,
-    });
-
-    LoginCredentials.mailID = process.env.REACT_APP_EMAIL; 
-    LoginCredentials.password = process.env.REACT_APP_EMAIL_PASS; 
-    LoginCredentials.use = true;
-
-    let genotp;
-    try {
-      const result = await Auth(req.body.email, "iNoteBook");
-      genotp = result.OTP;
-      console.log(result);
-      console.log(result.mail);
-      console.log(result.OTP);
-      console.log(result.success);
-    } catch (error) {
-      console.log(error);
-    }
-    success = true;
-    return res.json({ success,  nonUser});
-
-  } catch (error) {
-    console.error(error.message);
-    success = false;
-    return res.status(500).json({ success, error: "Internal Server Error" });
-  }
-})
-
 //ENDPOINT2: Authenticate a user using : POST "/api/auth/login". No login required
-
 router.post('/login', [
   body('email', 'Enter a valid Email').isEmail(),
   body('password', 'Password cannot be blank. ').exists(),

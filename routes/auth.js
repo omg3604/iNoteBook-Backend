@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = "Omis&agood&boy";
 const fetchUser = require('../middleware/fetchUser');
 
+require('dotenv').config();
 const nodemailer = require('nodemailer');
 const { google } = require("googleapis");
 const OAuth2 = google.auth.OAuth2;
@@ -140,8 +141,8 @@ const sendOTPVerificationMail = async ({_id , email}, res) =>{
     console.log(newUserVerify);
 
     // Sending the mail to the user
-    //let emailTransporter = await createTransporter();
-    // await emailTransporter.sendMail(mailOptions);
+    let emailTransporter = await createTransporter();
+    await emailTransporter.sendMail(mailOptions);
     res.json({
       status : "PENDING",
       message : "OTP Verification mail sent",

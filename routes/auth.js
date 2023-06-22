@@ -1,3 +1,7 @@
+import dotenv from "dotenv";
+// *Useful for getting environment vairables
+dotenv.config();
+
 const express = require('express');
 const User = require('../models/User');
 const UserVerify = require('../models/UserVerify');

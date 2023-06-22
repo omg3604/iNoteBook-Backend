@@ -119,7 +119,7 @@ const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
     };
 
     // Generate an HTML email with the provided contents
-    var mailHtml = mailGenerator.generate(emailcontent);
+    var mailHtml = MailGenerator.generate(emailcontent);
 
     const mailOptions = {
       from: process.env.REACT_APP_EMAIL,

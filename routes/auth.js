@@ -140,7 +140,7 @@ const sendOTPVerificationMail = async ({_id , email}, res) =>{
     console.log(newUserVerify);
 
     // Sending the mail to the user
-    let emailTransporter = await createTransporter();
+    //let emailTransporter = await createTransporter();
     // await emailTransporter.sendMail(mailOptions);
     res.json({
       status : "PENDING",

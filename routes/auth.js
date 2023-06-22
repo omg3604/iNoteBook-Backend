@@ -120,7 +120,7 @@ const sendOTPVerificationMail = async ({_id , email}, res) =>{
   catch(error){
     res.json({
       status : "FAILED",
-      message : error.message,
+      message : error.message+"this is an error",
     });
   }
 }

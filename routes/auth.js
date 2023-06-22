@@ -8,49 +8,20 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = "Omis&agood&boy";
 const fetchUser = require('../middleware/fetchUser');
 
-// require('dotenv').config();
+const nodemailer = require('nodemailer');
+const Mailgen = require('mailgen');
 
-// const nodemailer = require('nodemailer');
-// const { google } = require("googleapis");
-// const OAuth2 = google.auth.OAuth2;
+const createTransporter = async () => {
 
-// const createTransporter = async () => {
-//   const oauth2Client = new OAuth2(
-//     process.env.REACT_APP_CLIENT_ID,
-//     process.env.REACT_APP_CLIENT_SECRET,
-//     "https://developers.google.com/oauthplayground"
-//   );
-
-//   oauth2Client.setCredentials({
-//     refresh_token: process.env.REACT_APP_REFRESH_TOKEN
-//   });
-
-//   const accessToken = await new Promise((resolve, reject) => {
-//     oauth2Client.getAccessToken((err, token) => {
-//       if (err) {
-//         reject("Failed to create access token :(");
-//       }
-//       resolve(token);
-//     });
-//   });
-
-//   const transporter = nodemailer.createTransport({
-//     service: "gmail",
-//     auth: {
-//       type: "OAuth2",
-//       user: process.env.REACT_APP_EMAIL,
-//       clientId: process.env.REACT_APP_CLIENT_ID,
-//       clientSecret: process.env.REACT_APP_CLIENT_SECRET,
-//       refreshToken: process.env.REACT_APP_REFRESH_TOKEN,
-//       accessToken: accessToken,
-//     },
-//     tls: {
-//       rejectUnauthorized: false
-//     }
-//   });
-  
-//   return transporter;
-// };
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.REACT_APP_EMAIL,
+      pass: process.env.REACT_APP_EMAIL_PASS
+    }
+  });
+  return transporter;
+};
 
 
 // ENDPOINT1:  Create a user using : POST "/api/auth/createuser". No login required
@@ -93,20 +64,22 @@ router.post('/createuser', [
     }
 
     const result = {
-      _id : user.id,
-      email : user.email
+      _id: user.id,
+      name: user.name,
+      email: user.email
     }
 
     // Email otp verification process
-    //sendOTPVerificationMail(result , res); 
 
-    // generating authentication token
-    const authToken = jwt.sign(data, JWT_SECRET);
+    sendOTPVerificationMail(result , res); 
 
-    // res.json(user);
-    // sending auth token as response
-    success = true;
-    return res.json({ success, authToken });
+    // // generating authentication token
+    // const authToken = jwt.sign(data, JWT_SECRET);
+
+    // // res.json(user);
+    // // sending auth token as response
+    // success = true;
+    // return res.json({ success, authToken });
 
   } catch (error) {
     console.error(error.message);
@@ -115,53 +88,85 @@ router.post('/createuser', [
   }
 })
 
-// const sendOTPVerificationMail = async ({_id , email}, res) =>{
-//   try{
-//     const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
+const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
+  try {
+    const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
 
-//     // Mail Options
-//     const mailOptions = {
-//       from : process.env.REACT_APP_EMAIL,
-//       to: email,
-//       subject: "Verify Your Email",
-//       html: `<p>Enter <strong>${otp}</strong> in the iNoteBook application to verify your email address and complete the signup process.</p>
-//       <p> This code <strong>expires in 1 hour</strong>.</p>`,
-//     };
+    // Configure mailgen by setting a theme and your product info
+    let MailGenerator = new Mailgen({
+      theme: 'default',
+      product: {
+        name: "Email Verification",
+        link: "https://inotebook-enotes.netlify.app/"
+      }
+    })
 
-//     // Hashing the otp to store in db
-//     const salt = await bcrypt.genSalt(10);
-//     const hashedOTP = await bcrypt.hash(otp, salt);
+    // Generating a structured mail using Mailgen library
+    const emailcontent = {
+      body: {
+        name: name,
+        intro: "Thanks for Signing Up for iNoteBook! We're excited to have you on board.",
+        action: {
+          instructions: 'To get started with iNoteBook, please enter the below code to verify your email:',
+          button: {
+            color: 'black', // Optional action button color
+            text: otp,
+            link: ''
+          }
+        },
+        outro: 'Need help, or have questions? Just reply to this email, we\'d love to help.'
+      }
+    };
 
-//     // Saving the Verification details in db
-//     const newUserVerify = await UserVerify.create({
-//       userId : _id,
-//       otp: hashedOTP,
-//       createdAt: Date.now(),
-//       expiresAt: Date.now() + 3600000,
-//     })
+    // Generate an HTML email with the provided contents
+    var mailHtml = mailGenerator.generate(emailcontent);
 
-//     // Sending the mail to the user
-//     let emailTransporter = await createTransporter();
-//     await emailTransporter.sendMail(mailOptions);
-//     res.json({
-//       status : "PENDING",
-//       message : "OTP Verification mail sent",
-//       data: {
-//         userId : _id,
-//         email,
-//       }
-//     })
+    const mailOptions = {
+      from: process.env.REACT_APP_EMAIL,
+      to: email,
+      subject: "Verify Your Email",
+      // We can directly put html code here instead of using Mailgen library
+      html: mailHtml,
+    };
 
-//     console.log("email sent successfully");
+    // Hashing the otp to store in db
+    const salt = await bcrypt.genSalt(10);
+    const hashedOTP = await bcrypt.hash(otp, salt);
 
-//   }
-//   catch(error){
-//     res.json({
-//       status : "FAILED",
-//       message : error.message,
-//     });
-//   }
-// }
+    // Saving the Verification details in db
+    const newUserVerify = await UserVerify.create({
+      userId: _id,
+      otp: hashedOTP,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 3600000,
+    })
+
+    // Sending the mail to the user
+    let emailTransporter = await createTransporter();
+    await emailTransporter.sendMail(mailOptions).then(() => {
+      return res.status(201).json({
+        status: "PENDING",
+        message: "OTP Verification mail sent",
+        data: {
+          userId: _id,
+          email,
+        }
+      })
+    }).catch(error => {
+      return res.status(500).json({
+        status : "FAILED",
+        message : error.message,
+      })
+    });
+    //console.log("email sent successfully");
+  }
+  catch (error) {
+    res.json({
+      status: "FAILED",
+      message: error.message,
+    });
+  }
+}
 
 
 //ENDPOINT2: Authenticate a user using : POST "/api/auth/login". No login required

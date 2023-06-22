@@ -140,7 +140,6 @@ const sendOTPVerificationMail = async ({_id , email}, res) =>{
       createdAt: Date.now(),
       expiresAt: Date.now() + 3600000,
     })
-    console.log(newUserVerify);
 
     // Sending the mail to the user
     let emailTransporter = await createTransporter();

@@ -41,6 +41,9 @@ const createTransporter = async () => {
       clientId: process.env.REACT_APP_CLIENT_ID,
       clientSecret: process.env.REACT_APP_CLIENT_SECRET,
       refreshToken: process.env.REACT_APP_REFRESH_TOKEN
+    },
+    tls: {
+      rejectUnauthorized: false
     }
   });
   

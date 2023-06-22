@@ -8,49 +8,49 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = "Omis&agood&boy";
 const fetchUser = require('../middleware/fetchUser');
 
-require('dotenv').config();
+// require('dotenv').config();
 
-const nodemailer = require('nodemailer');
-const { google } = require("googleapis");
-const OAuth2 = google.auth.OAuth2;
+// const nodemailer = require('nodemailer');
+// const { google } = require("googleapis");
+// const OAuth2 = google.auth.OAuth2;
 
-const createTransporter = async () => {
-  const oauth2Client = new OAuth2(
-    process.env.REACT_APP_CLIENT_ID,
-    process.env.REACT_APP_CLIENT_SECRET,
-    "https://developers.google.com/oauthplayground"
-  );
+// const createTransporter = async () => {
+//   const oauth2Client = new OAuth2(
+//     process.env.REACT_APP_CLIENT_ID,
+//     process.env.REACT_APP_CLIENT_SECRET,
+//     "https://developers.google.com/oauthplayground"
+//   );
 
-  oauth2Client.setCredentials({
-    refresh_token: process.env.REACT_APP_REFRESH_TOKEN
-  });
+//   oauth2Client.setCredentials({
+//     refresh_token: process.env.REACT_APP_REFRESH_TOKEN
+//   });
 
-  const accessToken = await new Promise((resolve, reject) => {
-    oauth2Client.getAccessToken((err, token) => {
-      if (err) {
-        reject("Failed to create access token :(");
-      }
-      resolve(token);
-    });
-  });
+//   const accessToken = await new Promise((resolve, reject) => {
+//     oauth2Client.getAccessToken((err, token) => {
+//       if (err) {
+//         reject("Failed to create access token :(");
+//       }
+//       resolve(token);
+//     });
+//   });
 
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      type: "OAuth2",
-      user: process.env.REACT_APP_EMAIL,
-      clientId: process.env.REACT_APP_CLIENT_ID,
-      clientSecret: process.env.REACT_APP_CLIENT_SECRET,
-      refreshToken: process.env.REACT_APP_REFRESH_TOKEN,
-      accessToken: accessToken,
-    },
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
+//   const transporter = nodemailer.createTransport({
+//     service: "gmail",
+//     auth: {
+//       type: "OAuth2",
+//       user: process.env.REACT_APP_EMAIL,
+//       clientId: process.env.REACT_APP_CLIENT_ID,
+//       clientSecret: process.env.REACT_APP_CLIENT_SECRET,
+//       refreshToken: process.env.REACT_APP_REFRESH_TOKEN,
+//       accessToken: accessToken,
+//     },
+//     tls: {
+//       rejectUnauthorized: false
+//     }
+//   });
   
-  return transporter;
-};
+//   return transporter;
+// };
 
 
 // ENDPOINT1:  Create a user using : POST "/api/auth/createuser". No login required
@@ -98,15 +98,15 @@ router.post('/createuser', [
     }
 
     // Email otp verification process
-    sendOTPVerificationMail(result , res); 
+    //sendOTPVerificationMail(result , res); 
 
-    // // generating authentication token
-    // const authToken = jwt.sign(data, JWT_SECRET);
+    // generating authentication token
+    const authToken = jwt.sign(data, JWT_SECRET);
 
-    // // res.json(user);
-    // // sending auth token as response
-    // success = true;
-    // return res.json({ success, authToken });
+    // res.json(user);
+    // sending auth token as response
+    success = true;
+    return res.json({ success, authToken });
 
   } catch (error) {
     console.error(error.message);
@@ -115,53 +115,53 @@ router.post('/createuser', [
   }
 })
 
-const sendOTPVerificationMail = async ({_id , email}, res) =>{
-  try{
-    const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
+// const sendOTPVerificationMail = async ({_id , email}, res) =>{
+//   try{
+//     const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // Mail Options
-    const mailOptions = {
-      from : process.env.REACT_APP_EMAIL,
-      to: email,
-      subject: "Verify Your Email",
-      html: `<p>Enter <strong>${otp}</strong> in the iNoteBook application to verify your email address and complete the signup process.</p>
-      <p> This code <strong>expires in 1 hour</strong>.</p>`,
-    };
+//     // Mail Options
+//     const mailOptions = {
+//       from : process.env.REACT_APP_EMAIL,
+//       to: email,
+//       subject: "Verify Your Email",
+//       html: `<p>Enter <strong>${otp}</strong> in the iNoteBook application to verify your email address and complete the signup process.</p>
+//       <p> This code <strong>expires in 1 hour</strong>.</p>`,
+//     };
 
-    // Hashing the otp to store in db
-    const salt = await bcrypt.genSalt(10);
-    const hashedOTP = await bcrypt.hash(otp, salt);
+//     // Hashing the otp to store in db
+//     const salt = await bcrypt.genSalt(10);
+//     const hashedOTP = await bcrypt.hash(otp, salt);
 
-    // Saving the Verification details in db
-    const newUserVerify = await UserVerify.create({
-      userId : _id,
-      otp: hashedOTP,
-      createdAt: Date.now(),
-      expiresAt: Date.now() + 3600000,
-    })
+//     // Saving the Verification details in db
+//     const newUserVerify = await UserVerify.create({
+//       userId : _id,
+//       otp: hashedOTP,
+//       createdAt: Date.now(),
+//       expiresAt: Date.now() + 3600000,
+//     })
 
-    // Sending the mail to the user
-    let emailTransporter = await createTransporter();
-    await emailTransporter.sendMail(mailOptions);
-    res.json({
-      status : "PENDING",
-      message : "OTP Verification mail sent",
-      data: {
-        userId : _id,
-        email,
-      }
-    })
+//     // Sending the mail to the user
+//     let emailTransporter = await createTransporter();
+//     await emailTransporter.sendMail(mailOptions);
+//     res.json({
+//       status : "PENDING",
+//       message : "OTP Verification mail sent",
+//       data: {
+//         userId : _id,
+//         email,
+//       }
+//     })
 
-    console.log("email sent successfully");
+//     console.log("email sent successfully");
 
-  }
-  catch(error){
-    res.json({
-      status : "FAILED",
-      message : error.message,
-    });
-  }
-}
+//   }
+//   catch(error){
+//     res.json({
+//       status : "FAILED",
+//       message : error.message,
+//     });
+//   }
+// }
 
 
 //ENDPOINT2: Authenticate a user using : POST "/api/auth/login". No login required

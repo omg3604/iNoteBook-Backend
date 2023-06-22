@@ -19,10 +19,8 @@ const createTransporter = async () => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "golhaniom24@gmail.com",
-      pass: "rstbmdpgyoxijlmd"
-      // user: process.env.REACT_APP_EMAIL,
-      // pass: process.env.REACT_APP_EMAIL_PASS
+      user: process.env.REACT_APP_EMAIL,
+      pass: process.env.REACT_APP_EMAIL_PASS
     }
   });
   return transporter;

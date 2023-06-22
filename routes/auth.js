@@ -1,10 +1,20 @@
 const express = require('express');
 const User = require('../models/User');
+const UserVerify = require('../models/UserVerify');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fetchUser = require('../middleware/fetchUser');
+
+const nodemailer = require('nodemailer');
+let transporter = nodemailer.createTransport({
+  host: "smtp-mail.outlook.com",
+  auth: {
+    user : process.env.REACT_APP_EMAIL,
+    pass : process.env.REACT_APP_EMAIL_PASS
+  },
+});
 
 const JWT_SECRET = "Omis&agood&boy";
 
@@ -38,6 +48,7 @@ router.post('/createuser', [
       name: req.body.name,
       email: req.body.email,
       password: secPass,
+      verified: false,
     });
 
     const data = {
@@ -45,13 +56,22 @@ router.post('/createuser', [
         id: user.id
       }
     }
-    // generating authentication token
-    const authToken = jwt.sign(data, JWT_SECRET);
 
-    // res.json(user);
-    // sending auth token as response
-    success = true;
-    return res.json({ success, authToken });
+    const result = {
+      _id : user.id,
+      email : user.email
+    }
+
+    // Email otp verification process
+    sendOTPVerificationMail(result , res); 
+
+    // // generating authentication token
+    // const authToken = jwt.sign(data, JWT_SECRET);
+
+    // // res.json(user);
+    // // sending auth token as response
+    // success = true;
+    // return res.json({ success, authToken });
 
   } catch (error) {
     console.error(error.message);
@@ -59,6 +79,53 @@ router.post('/createuser', [
     return res.status(500).json({ success, error: "Internal Server Error" });
   }
 })
+
+const sendOTPVerificationMail = async (req , res) =>{
+  const {_id , email} = req.body;
+  try{
+    const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // Mail Options
+    const mailOptions = {
+      from : process.env.REACT_APP_EMAIL,
+      to: email,
+      subject: "Verify Your Email",
+      html: `<p>Enter <strong>${otp}</strong> in the iNoteBook application to verify your email address and complete the signup process.</p>
+      <p> This code <strong>expires in 1 hour</strong>.</p>`,
+    };
+
+    // Hashing the otp to store in db
+    const salt = await bcrypt.genSalt(10);
+    const hashedOTP = await bcrypt.hash(otp, salt);
+
+    // Saving the Verification details in db
+    const newUserVerify = await UserVerify.create({
+      userId : _id,
+      otp: hashedOTP,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 3600000,
+    })
+
+    // Sending the mail to the user
+    await transporter.sendMail(mailOptions);
+    res.json({
+      status : "PENDING",
+      message : "OTP Verification mail sent",
+      data: {
+        userId : _id,
+        email,
+      }
+    })
+
+  }
+  catch(error){
+    res.json({
+      status : "FAILED",
+      message : error.message,
+    });
+  }
+}
+
 
 //ENDPOINT2: Authenticate a user using : POST "/api/auth/login". No login required
 router.post('/login', [

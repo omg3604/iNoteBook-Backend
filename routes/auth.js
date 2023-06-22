@@ -8,6 +8,9 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = "Omis&agood&boy";
 const fetchUser = require('../middleware/fetchUser');
 
+const dotenv = require('dotenv');
+dotenv.config();
+
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 

@@ -5,18 +5,48 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const JWT_SECRET = "Omis&agood&boy";
 const fetchUser = require('../middleware/fetchUser');
 
 const nodemailer = require('nodemailer');
-let transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  auth: {
-    user : process.env.REACT_APP_EMAIL,
-    pass : process.env.REACT_APP_EMAIL_PASS
-  },
-});
+const { google } = require("googleapis");
+const OAuth2 = google.auth.OAuth2;
 
-const JWT_SECRET = "Omis&agood&boy";
+const createTransporter = async () => {
+  const oauth2Client = new OAuth2(
+    process.env.REACT_APP_CLIENT_ID,
+    process.env.REACT_APP_CLIENT_SECRET,
+    "https://developers.google.com/oauthplayground"
+  );
+
+  oauth2Client.setCredentials({
+    refresh_token: process.env.REACT_APP_REFRESH_TOKEN
+  });
+
+  const accessToken = await new Promise((resolve, reject) => {
+    oauth2Client.getAccessToken((err, token) => {
+      if (err) {
+        reject("Failed to create access token :(");
+      }
+      resolve(token);
+    });
+  });
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      type: "OAuth2",
+      user: process.env.REACT_APP_EMAIL,
+      accessToken,
+      clientId: process.env.REACT_APP_CLIENT_ID,
+      clientSecret: process.env.REACT_APP_CLIENT_SECRET,
+      refreshToken: process.env.REACT_APP_REFRESH_TOKEN
+    }
+  });
+  
+  return transporter;
+};
+
 
 // ENDPOINT1:  Create a user using : POST "/api/auth/createuser". No login required
 
@@ -106,7 +136,8 @@ const sendOTPVerificationMail = async ({_id , email}, res) =>{
     })
 
     // Sending the mail to the user
-    await transporter.sendMail(mailOptions);
+    let emailTransporter = await createTransporter();
+    await emailTransporter.sendMail(mailOptions);
     res.json({
       status : "PENDING",
       message : "OTP Verification mail sent",

@@ -9,7 +9,7 @@ const fetchUser = require('../middleware/fetchUser');
 
 const nodemailer = require('nodemailer');
 let transporter = nodemailer.createTransport({
-  host: "smtp-mail.outlook.com",
+  host: "smtp.gmail.com",
   auth: {
     user : process.env.REACT_APP_EMAIL,
     pass : process.env.REACT_APP_EMAIL_PASS
@@ -120,7 +120,7 @@ const sendOTPVerificationMail = async ({_id , email}, res) =>{
   catch(error){
     res.json({
       status : "FAILED",
-      message : "this is an error",
+      message : error.message,
     });
   }
 }

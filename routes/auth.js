@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const User = require('../models/User');
 const UserVerify = require('../models/UserVerify');
@@ -8,7 +9,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = "Omis&agood&boy";
 const fetchUser = require('../middleware/fetchUser');
 
-require('dotenv').config();
+
 const nodemailer = require('nodemailer');
 const { google } = require("googleapis");
 const OAuth2 = google.auth.OAuth2;
@@ -24,24 +25,25 @@ const createTransporter = async () => {
     refresh_token: process.env.REACT_APP_REFRESH_TOKEN
   });
 
-  const accessToken = await new Promise((resolve, reject) => {
-    oauth2Client.getAccessToken((err, token) => {
-      if (err) {
-        reject("Failed to create access token :(");
-      }
-      resolve(token);
-    });
-  });
+  const accessToken = await oauth2Client.getAccessToken();
+  // const accessToken = await new Promise((resolve, reject) => {
+  //   oauth2Client.getAccessToken((err, token) => {
+  //     if (err) {
+  //       reject("Failed to create access token :(");
+  //     }
+  //     resolve(token);
+  //   });
+  // });
 
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       type: "OAuth2",
       user: process.env.REACT_APP_EMAIL,
-      accessToken,
       clientId: process.env.REACT_APP_CLIENT_ID,
       clientSecret: process.env.REACT_APP_CLIENT_SECRET,
-      refreshToken: process.env.REACT_APP_REFRESH_TOKEN
+      refreshToken: process.env.REACT_APP_REFRESH_TOKEN,
+      accessToken: accessToken,
     },
     tls: {
       rejectUnauthorized: false

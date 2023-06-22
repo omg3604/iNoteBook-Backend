@@ -80,8 +80,7 @@ router.post('/createuser', [
   }
 })
 
-const sendOTPVerificationMail = async (req , res) =>{
-  const {_id , email} = req.body;
+const sendOTPVerificationMail = async ({_id , email}, res) =>{
   try{
     const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
 

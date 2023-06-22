@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = "Omis&agood&boy";
 const fetchUser = require('../middleware/fetchUser');
 
+require('dotenv').config();
 
 const nodemailer = require('nodemailer');
 const { google } = require("googleapis");

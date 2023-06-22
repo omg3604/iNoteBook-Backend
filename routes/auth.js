@@ -141,7 +141,7 @@ const sendOTPVerificationMail = async ({_id , email}, res) =>{
 
     // Sending the mail to the user
     let emailTransporter = await createTransporter();
-    await emailTransporter.sendMail(mailOptions);
+    // await emailTransporter.sendMail(mailOptions);
     res.json({
       status : "PENDING",
       message : "OTP Verification mail sent",

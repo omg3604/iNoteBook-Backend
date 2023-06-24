@@ -69,17 +69,17 @@ router.post('/createuser', [
       email: user.email
     }
 
-    // Email otp verification process
+    // Sending OTP Email to User
 
     sendOTPVerificationMail(result , res); 
 
-    // // generating authentication token
-    // const authToken = jwt.sign(data, JWT_SECRET);
+    // generating authentication token
+    const authToken = jwt.sign(data, JWT_SECRET);
 
-    // // res.json(user);
-    // // sending auth token as response
-    // success = true;
-    // return res.json({ success, authToken });
+    // res.json(user);
+    // sending auth token as response
+    success = true;
+    return res.json({ success, authToken });
 
   } catch (error) {
     console.error(error.message);
@@ -88,6 +88,7 @@ router.post('/createuser', [
   }
 })
 
+// Function to send OTP mail to user
 const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
   try {
     const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
@@ -117,6 +118,8 @@ const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
         outro: 'Need help, or have questions? Just reply to this email, we\'d love to help.'
       }
     };
+
+
 
     // Generate an HTML email with the provided contents
     var mailHtml = MailGenerator.generate(emailcontent);
@@ -168,6 +171,61 @@ const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
   }
 }
 
+// ENDPOINT: OTP Verfication
+router.post("/verifyOTP" , async (req , res) => {
+    try {
+      // not enough details.
+      let {user_id , otp} = req.body;
+      if(!user_id || !otp){
+        throw Error("Empty otp details are not allowed.");
+      }
+      else{
+        // finding the user otp details record.
+        const UserotpVerificationDetails = await UserVerify.find({
+          user_id,
+        })
+        if(UserotpVerificationDetails.length <= 0){
+          // no record found
+          throw new Error("Accout doesn't exists or has been verified already. Please sign up or log in.");
+        }
+        else{
+          // user otp record exists.
+          const {expiresAt} = UserotpVerificationDetails[0];
+          const hashedOTP = UserotpVerificationDetails[0].otp;
+
+          if(expiresAt < Date.now()){
+            // user otp details has expired
+            await UserVerify.deleteMany({user_id});
+            throw new Error("The code has expired. Please request a new code.");
+          }
+          else{
+            const isValisOtp = await bcrypt.compare(otp , hashedOTP);
+
+            if(!isValisOtp){
+              //throw new Error("The otp does not match or is invalid.")
+              return res.json({
+                status : "FAILED",
+                message : "The OTP doesn't match or is invalid OTP!"
+              });
+            }
+            else{
+              await User.updateOne({id : user_id} , {verified : true});
+              await UserotpVerificationDetails.deleteMany({user_id});
+              res.json({
+                status : "VERIFIED",
+                message : "User Details have been verified successfully. You can log into your account now."
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      return res.json({
+        sttaus : "FAILED",
+        message : error.message
+      })
+    }
+})
 
 //ENDPOINT2: Authenticate a user using : POST "/api/auth/login". No login required
 router.post('/login', [

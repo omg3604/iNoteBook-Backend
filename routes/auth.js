@@ -8,9 +8,6 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = "Omis&agood&boy";
 const fetchUser = require('../middleware/fetchUser');
 
-// const dotenv = require('dotenv');
-// dotenv.config();
-
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 
@@ -19,8 +16,8 @@ const createTransporter = async () => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.REACT_APP_EMAIL,
-      pass: process.env.REACT_APP_EMAIL_PASS
+      user: process.env.CYCLIC_EMAIL,
+      pass: process.env.CYCLIC_PASS
     }
   });
   return transporter;

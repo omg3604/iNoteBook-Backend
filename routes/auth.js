@@ -70,7 +70,6 @@ router.post('/createuser', [
     }
 
     // Sending OTP Email to User
-
     sendOTPVerificationMail(result , res); 
 
     // generating authentication token
@@ -195,7 +194,7 @@ router.post("/verifyOTP" , async (req , res) => {
 
           if(expiresAt < Date.now()){
             // user otp details has expired
-            await UserVerify.deleteMany({user_id});
+            await UserVerify.deleteMany({userId});
             throw new Error("The code has expired. Please request a new code.");
           }
           else{
@@ -209,7 +208,7 @@ router.post("/verifyOTP" , async (req , res) => {
               });
             }
             else{
-              await User.updateOne({id : userId} , {verified : true});
+              await User.updateOne({_id : userId} , {verified : true});
               await UserVerify.deleteMany({userId});
               res.json({
                 status : "VERIFIED",
@@ -221,11 +220,31 @@ router.post("/verifyOTP" , async (req , res) => {
       }
     } catch (error) {
       return res.json({
-        sttaus : "FAILED",
+        status : "FAILED",
         message : error.message
       })
     }
 })
+
+// ENDPOINT : For resending the otp for Email Verification
+router.post('/resendOTP' , async(req , res) => {
+  try {
+    let {userId , email} = req.body;
+    if(!userId || !email){
+      throw ErrorEvent("Empty User details are not allowed.");
+    }
+    else{
+      // delete any previous otpverification record of the same user
+      await UserVerify.deleteMany({userId});
+      sendOTPVerificationMail({_id : userId , email} , res);
+    }
+  } catch (error) {
+    res.json({
+      status : "FAILED",
+      message : error.message
+    })
+  }
+});
 
 //ENDPOINT2: Authenticate a user using : POST "/api/auth/login". No login required
 router.post('/login', [
@@ -257,12 +276,13 @@ router.post('/login', [
       return res.status(400).json({ success, error: "Invalid credentials." });
     }
 
-    // if password matches, send the data
+    // if password matches, send the data           
     const data = {
       user: {
         id: user.id
       }
     }
+
     // generating auth token
     const authToken = jwt.sign(data, JWT_SECRET);
     // sending auth token of corresponding user as response

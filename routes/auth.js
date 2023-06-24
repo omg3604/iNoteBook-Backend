@@ -74,12 +74,12 @@ router.post('/createuser', [
     sendOTPVerificationMail(result , res); 
 
     // generating authentication token
-    const authToken = jwt.sign(data, JWT_SECRET);
+    //const authToken = jwt.sign(data, JWT_SECRET);
 
     // res.json(user);
     // sending auth token as response
-    success = true;
-    return res.json({ success, authToken });
+    //success = true;
+    //return res.json({ success, authToken });
 
   } catch (error) {
     console.error(error.message);

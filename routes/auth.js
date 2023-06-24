@@ -175,14 +175,14 @@ const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
 router.post("/verifyOTP" , async (req , res) => {
     try {
       // not enough details.
-      let {user_id , otp} = req.body;
-      if(!user_id || !otp){
+      let {userId , otp} = req.body;
+      if(!userId || !otp){
         throw Error("Empty otp details are not allowed.");
       }
       else{
         // finding the user otp details record.
         const UserotpVerificationDetails = await UserVerify.find({
-          user_id,
+          userId,
         })
         if(UserotpVerificationDetails.length <= 0){
           // no record found
@@ -209,8 +209,8 @@ router.post("/verifyOTP" , async (req , res) => {
               });
             }
             else{
-              await User.updateOne({id : user_id} , {verified : true});
-              await UserotpVerificationDetails.deleteMany({user_id});
+              await User.updateOne({id : userId} , {verified : true});
+              await UserVerify.deleteMany({userId});
               res.json({
                 status : "VERIFIED",
                 message : "User Details have been verified successfully. You can log into your account now."

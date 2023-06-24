@@ -96,7 +96,7 @@ const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
     let MailGenerator = new Mailgen({
       theme: 'default',
       product: {
-        name: "Email Verification",
+        name: "iNoteBook",
         link: "https://inotebook-enotes.netlify.app/"
       }
     })
@@ -124,7 +124,7 @@ const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
     var mailHtml = MailGenerator.generate(emailcontent);
 
     const mailOptions = {
-      from: process.env.REACT_APP_EMAIL,
+      from: process.env.CYCLIC_EMAIL,
       to: email,
       subject: "Verify Your Email",
       // We can directly put html code here instead of using Mailgen library

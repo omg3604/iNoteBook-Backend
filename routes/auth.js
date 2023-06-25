@@ -276,8 +276,15 @@ router.post('/login', [
     // if no user exists then return error
     if (!user) {
       success = false;
-      return res.status(400).json({ success, error: "Invalid credentials." });
+      return res.status(400).json({ success, error: "No user exists with such credentials." });
     }
+
+    // If the user's email is unverified.
+    if(user.verified === false){
+      success = false;
+      return res.status(400).json({ success, error: "The email of the user is not verified. Please verify first then try login again." });
+    }
+
     // if user with given email exists then match the corresponding password with entered one
     const passwordCompare = await bcrypt.compare(password, user.password);
 

@@ -292,10 +292,10 @@ router.post('/login', [
         email: user.email
       }
       sendOTPVerificationMail(result, res);
-      return res.status(400).json({
-        status: "UNVERIFIED",
-        message: "The email of the user is not verified. Please verify first then try logging again."
-      });
+      // return res.status(400).json({
+      //   status: "UNVERIFIED",
+      //   message: "The email of the user is not verified. Please verify first then try logging again."
+      // });
     }
 
     // if user with given email exists then match the corresponding password with entered one

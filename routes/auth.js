@@ -292,6 +292,7 @@ router.post('/login', [
         email: user.email
       }
       sendOTPVerificationMail(result, res);
+      return;
       // return res.status(400).json({
       //   status: "UNVERIFIED",
       //   message: "The email of the user is not verified. Please verify first then try logging again."

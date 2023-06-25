@@ -41,8 +41,10 @@ router.post('/createuser', [
     // Check whether user with same email exists already
     let user = await User.findOne({ email: req.body.email });
     if (user) {
-      success = false;
-      return res.status(400).json({ success, error: "Sorry, User with this email already exists." })
+      return res.status(400).json({
+        status : "FAILED", 
+        message : "Sorry, User with this email already exists." 
+      })
     }
     // if no user with same email exists then create user with the given email and details
     // Encrypting the password using bcryptjs package
@@ -176,7 +178,10 @@ router.post("/verifyOTP" , async (req , res) => {
       // not enough details.
       let {userId , otp} = req.body;
       if(!userId || !otp){
-        throw Error("Empty otp details are not allowed.");
+        return res.json({
+          status : "FAILED",
+          message : "Empty otp details are not allowed."
+        });
       }
       else{
         // finding the user otp details record.
@@ -185,7 +190,10 @@ router.post("/verifyOTP" , async (req , res) => {
         })
         if(UserotpVerificationDetails.length <= 0){
           // no record found
-          throw new Error("Accout doesn't exists or has been verified already. Please sign up or log in.");
+          return res.json({
+            status : "FAILED",
+            message : "Accout doesn't exists or has been verified already. Please log in using your credentials."
+          });
         }
         else{
           // user otp record exists.
@@ -195,7 +203,10 @@ router.post("/verifyOTP" , async (req , res) => {
           if(expiresAt < Date.now()){
             // user otp details has expired
             await UserVerify.deleteMany({userId});
-            throw new Error("The code has expired. Please request a new code.");
+            return res.json({
+                status : "FAILED",
+                message : "The code has expired. Please request a new code."
+            });
           }
           else{
             const isValisOtp = await bcrypt.compare(otp , hashedOTP);

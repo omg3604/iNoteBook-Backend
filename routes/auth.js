@@ -286,6 +286,11 @@ router.post('/login', [
 
     // If the user's email is not verified.
     if (user.verified === false) {
+      const result = {
+        _id: user.id,
+        name: user.name,
+        email: user.email
+      }
       sendOTPVerificationMail(result, res);
       return res.status(400).json({
         status: "UNVERIFIED",

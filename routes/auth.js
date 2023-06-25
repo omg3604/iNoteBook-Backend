@@ -42,8 +42,8 @@ router.post('/createuser', [
     let user = await User.findOne({ email: req.body.email });
     if (user) {
       return res.status(400).json({
-        status : "FAILED", 
-        message : "Sorry, User with this email already exists." 
+        status: "FAILED",
+        message: "Sorry, User with this email already exists."
       })
     }
     // if no user with same email exists then create user with the given email and details
@@ -72,7 +72,7 @@ router.post('/createuser', [
     }
 
     // Sending OTP Email to User
-    sendOTPVerificationMail(result , res); 
+    sendOTPVerificationMail(result, res);
 
     // generating authentication token
     //const authToken = jwt.sign(data, JWT_SECRET);
@@ -158,8 +158,8 @@ const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
       })
     }).catch(error => {
       return res.status(500).json({
-        status : "FAILED",
-        message : error.message,
+        status: "FAILED",
+        message: error.message,
       })
     });
     //console.log("email sent successfully");
@@ -173,86 +173,86 @@ const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
 }
 
 // ENDPOINT: OTP Verfication
-router.post("/verifyOTP" , async (req , res) => {
-    try {
-      // not enough details.
-      let {userId , otp} = req.body;
-      if(!userId || !otp){
+router.post("/verifyOTP", async (req, res) => {
+  try {
+    // not enough details.
+    let { userId, otp } = req.body;
+    if (!userId || !otp) {
+      return res.json({
+        status: "FAILED",
+        message: "Empty otp details are not allowed."
+      });
+    }
+    else {
+      // finding the user otp details record.
+      const UserotpVerificationDetails = await UserVerify.find({
+        userId,
+      })
+      if (UserotpVerificationDetails.length <= 0) {
+        // no record found
         return res.json({
-          status : "FAILED",
-          message : "Empty otp details are not allowed."
+          status: "FAILED",
+          message: "Accout doesn't exists or has been verified already. Please log in using your credentials."
         });
       }
-      else{
-        // finding the user otp details record.
-        const UserotpVerificationDetails = await UserVerify.find({
-          userId,
-        })
-        if(UserotpVerificationDetails.length <= 0){
-          // no record found
+      else {
+        // user otp record exists.
+        const { expiresAt } = UserotpVerificationDetails[0];
+        const hashedOTP = UserotpVerificationDetails[0].otp;
+
+        if (expiresAt < Date.now()) {
+          // user otp details has expired
+          await UserVerify.deleteMany({ userId });
           return res.json({
-            status : "FAILED",
-            message : "Accout doesn't exists or has been verified already. Please log in using your credentials."
+            status: "FAILED",
+            message: "The code has expired. Please request a new code."
           });
         }
-        else{
-          // user otp record exists.
-          const {expiresAt} = UserotpVerificationDetails[0];
-          const hashedOTP = UserotpVerificationDetails[0].otp;
+        else {
+          const isValisOtp = await bcrypt.compare(otp, hashedOTP);
 
-          if(expiresAt < Date.now()){
-            // user otp details has expired
-            await UserVerify.deleteMany({userId});
+          if (!isValisOtp) {
+            //throw new Error("The otp does not match or is invalid.")
             return res.json({
-                status : "FAILED",
-                message : "The code has expired. Please request a new code."
+              status: "FAILED",
+              message: "The OTP doesn't match or is invalid OTP!"
             });
           }
-          else{
-            const isValisOtp = await bcrypt.compare(otp , hashedOTP);
-
-            if(!isValisOtp){
-              //throw new Error("The otp does not match or is invalid.")
-              return res.json({
-                status : "FAILED",
-                message : "The OTP doesn't match or is invalid OTP!"
-              });
-            }
-            else{
-              await User.updateOne({_id : userId} , {verified : true});
-              await UserVerify.deleteMany({userId});
-              res.json({
-                status : "VERIFIED",
-                message : "User Details have been verified successfully. You can log into your account now."
-              });
-            }
+          else {
+            await User.updateOne({ _id: userId }, { verified: true });
+            await UserVerify.deleteMany({ userId });
+            res.json({
+              status: "VERIFIED",
+              message: "User Details have been verified successfully. You can log into your account now."
+            });
           }
         }
       }
-    } catch (error) {
-      return res.json({
-        status : "FAILED",
-        message : error.message
-      })
     }
+  } catch (error) {
+    return res.json({
+      status: "FAILED",
+      message: error.message
+    })
+  }
 })
 
 // ENDPOINT : For resending the otp for Email Verification
-router.post('/resendOTP' , async(req , res) => {
+router.post('/resendOTP', async (req, res) => {
   try {
-    let {userId , email} = req.body;
-    if(!userId || !email){
+    let { userId, email } = req.body;
+    if (!userId || !email) {
       throw ErrorEvent("Empty User details are not allowed.");
     }
-    else{
+    else {
       // delete any previous otpverification record of the same user
-      await UserVerify.deleteMany({userId});
-      sendOTPVerificationMail({_id : userId , email} , res);
+      await UserVerify.deleteMany({ userId });
+      sendOTPVerificationMail({ _id: userId, email }, res);
     }
   } catch (error) {
     res.json({
-      status : "FAILED",
-      message : error.message
+      status: "FAILED",
+      message: error.message
     })
   }
 });
@@ -267,7 +267,10 @@ router.post('/login', [
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     success = false;
-    return res.status(400).json({ success, error: errors.array() });
+    return res.status(400).json({
+      status: "FAILED",
+      message: errors.array()
+    });
   }
 
   const { email, password } = req.body;
@@ -275,14 +278,19 @@ router.post('/login', [
     let user = await User.findOne({ email });
     // if no user exists then return error
     if (!user) {
-      success = false;
-      return res.status(400).json({ success, error: "No user exists with such credentials." });
+      return res.status(400).json({
+        status: "FAILED",
+        message: "No user exists with such credentials."
+      });
     }
 
-    // If the user's email is unverified.
-    if(user.verified === false){
-      success = false;
-      return res.status(400).json({ success, error: "The email of the user is not verified. Please verify first then try login again." });
+    // If the user's email is not verified.
+    if (user.verified === false) {
+      sendOTPVerificationMail(result, res);
+      return res.status(400).json({
+        status: "UNVERIFIED",
+        message: "The email of the user is not verified. Please verify first then try logging again."
+      });
     }
 
     // if user with given email exists then match the corresponding password with entered one
@@ -290,8 +298,10 @@ router.post('/login', [
 
     // if password doesnot match, return error
     if (!passwordCompare) {
-      success = false;
-      return res.status(400).json({ success, error: "Invalid credentials." });
+      return res.status(400).json({
+        status: "FAILED",
+        message: "Invalid credentials."
+      });
     }
 
     // if password matches, send the data           
@@ -304,13 +314,18 @@ router.post('/login', [
     // generating auth token
     const authToken = jwt.sign(data, JWT_SECRET);
     // sending auth token of corresponding user as response
-    success = true;
-    res.json({ success, authToken });
+    res.json({
+      status: "SUCCESS",
+      authToken: authToken
+    });
 
   } catch (error) {
     console.error(error.message);
     success = false;
-    return res.status(500).json({ success, error: "Internal Server Error" });
+    return res.status(500).json({
+      status: "FAILED",
+      message: "Internal Server Error"
+    });
   }
 });
 

@@ -138,7 +138,7 @@ const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
     const hashedOTP = await bcrypt.hash(otp, salt);
 
     // Saving the Verification details in db
-    await UserVerify.deleteMany({userId});
+    await UserVerify.deleteMany({_id});
     const newUserVerify = await UserVerify.create({
       userId: _id,
       otp: hashedOTP,

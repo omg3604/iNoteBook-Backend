@@ -270,14 +270,16 @@ router.post('/forgetpassword', async (req, res) => {
         message: "No user exists with such email."
       });
     }
-
-    const userId = user._id;
-    console.log(userId);
+    const result = {
+      _id: user.id,
+      name: user.name,
+      email: user.email
+    }
     // res.json({
     //   _id : userId,
     //   mail : usermail
     // })
-    sendOTPVerificationMail({ _id: userId, mail:email }, res);
+    sendOTPVerificationMail(result, res);
   } catch (error) {
     res.json({
       status: "FAILED",

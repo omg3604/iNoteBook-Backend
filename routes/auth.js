@@ -260,9 +260,9 @@ router.post('/resendOTP', async (req, res) => {
 
 // ENDPOINT : for sending mail to reset password : POT "/api/auth/forgetpassword". No Login Required
 router.post('/forgetpassword', async (req, res) => {
-  const { usermail } = req.body;
+  const { email } = req.body;
   try {
-    let user = await User.findOne({ usermail });
+    let user = await User.findOne({ email });
     // if no user exists then return error
     if (!user) {
       return res.status(400).json({
@@ -277,7 +277,7 @@ router.post('/forgetpassword', async (req, res) => {
     //   _id : userId,
     //   mail : usermail
     // })
-    sendOTPVerificationMail({ _id: userId, mail:usermail }, res);
+    sendOTPVerificationMail({ _id: userId, mail:email }, res);
   } catch (error) {
     res.json({
       status: "FAILED",

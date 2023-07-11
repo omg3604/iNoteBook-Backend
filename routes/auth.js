@@ -107,9 +107,9 @@ const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
     const emailcontent = {
       body: {
         name: name,
-        intro: "Thanks for Signing Up for iNoteBook! We're excited to have you on board.",
+        intro: "Thanks for using iNoteBook! We're excited to have you on board.",
         action: {
-          instructions: 'To get started with iNoteBook, please enter the below code to verify your email:',
+          instructions: 'To verify your identity, please enter the below code to verify your email:',
           button: {
             color: 'black', // Optional action button color
             text: otp,
@@ -138,7 +138,7 @@ const sendOTPVerificationMail = async ({ _id, name, email }, res) => {
     const hashedOTP = await bcrypt.hash(otp, salt);
 
     // Saving the Verification details in db
-    await UserVerify.deleteMany({userId : _id});
+    await UserVerify.deleteMany({ userId: _id });
     const newUserVerify = await UserVerify.create({
       userId: _id,
       otp: hashedOTP,
@@ -257,6 +257,30 @@ router.post('/resendOTP', async (req, res) => {
     })
   }
 });
+
+// ENDPOINT : for sending mail to reset password : POT "/api/auth/forgetpassword". No Login Required
+router.post('/forgetpassword', async (req, res) => {
+  const { usermail } = req.body;
+  try {
+    let user = await User.findOne({ usermail });
+    // if no user exists then return error
+    if (!user) {
+      return res.status(400).json({
+        status: "FAILED",
+        message: "No user exists with such email."
+      });
+    }
+
+    const userId = user._id;
+    console.log(userId);
+    sendOTPVerificationMail({ _id: userId, usermail }, res);
+  } catch (error) {
+    res.json({
+      status: "FAILED",
+      message: error.message
+    })
+  }
+})
 
 //ENDPOINT2: Authenticate a user using : POST "/api/auth/login". No login required
 router.post('/login', [

@@ -275,10 +275,6 @@ router.post('/forgetpassword', async (req, res) => {
       name: user.name,
       email: user.email
     }
-    // res.json({
-    //   _id : userId,
-    //   mail : usermail
-    // })
     sendOTPVerificationMail(result, res);
   } catch (error) {
     res.json({
@@ -287,6 +283,38 @@ router.post('/forgetpassword', async (req, res) => {
     })
   }
 })
+
+// ENDPOINT : Reset password of a user : POST "/api/auth/resetpassword". No Login required.
+router.post('/resetpassword', async(req , res) => {
+  const {email , newpass} = req.body;
+  try {
+    let user = await User.findOne({ email });
+    // if no user exists then return error
+    if (!user) {
+      return res.status(400).json({
+        status: "FAILED",
+        message: "No user exists with such email."
+      });
+    }
+    
+    const salt = await bcrypt.genSalt(10);
+    const secPass = await bcrypt.hash(newpass, salt);
+
+    const userId = user.id;
+    let newdet = {};
+    newdet.password = secPass;
+    let updateduser = await User.findByIdAndUpdate(userId, { $set: newdet }, { new: true });    
+    res.json({
+      status : "SUCCESS",
+      message : "Password reset Successfullly!"
+    })
+  } catch (error) {
+    res.json({
+      status: "FAILED",
+      message: error.message
+    })
+  }
+});
 
 //ENDPOINT2: Authenticate a user using : POST "/api/auth/login". No login required
 router.post('/login', [

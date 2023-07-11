@@ -273,7 +273,11 @@ router.post('/forgetpassword', async (req, res) => {
 
     const userId = user._id;
     console.log(userId);
-    sendOTPVerificationMail({ _id: userId, usermail }, res);
+    res.json({
+      userid : userId,
+      email : usermail
+    })
+    // sendOTPVerificationMail({ _id: userId, usermail }, res);
   } catch (error) {
     res.json({
       status: "FAILED",

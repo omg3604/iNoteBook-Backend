@@ -193,7 +193,7 @@ router.post("/verifyOTP", async (req, res) => {
         // no record found
         return res.json({
           status: "FAILED",
-          message: "Accout doesn't exists or has been verified already. Please log in using your credentials."
+          message: "Account doesn't exists or has been verified already. Please log in using your credentials."
         });
       }
       else {
@@ -224,7 +224,7 @@ router.post("/verifyOTP", async (req, res) => {
             await UserVerify.deleteMany({ userId });
             res.json({
               status: "VERIFIED",
-              message: "User Details have been verified successfully. You can log into your account now."
+              message: "User Email have been verified successfully."
             });
           }
         }

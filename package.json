@@ -2,7 +2,7 @@
   "name": "inotebook-backend",
   "version": "1.0.0",
   "description": "iNotebook : your Cloud Notebook",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"No test specified\" && exit 1",
     "start": "node server.js"
